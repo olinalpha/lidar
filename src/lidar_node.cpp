@@ -8,7 +8,7 @@
 
 ros::Publisher *velocity_data_ptr;
 float velocity;
-int angle_threshold = 10;
+float angle_threshold = .17433;
 float angle_min;
 float angle_increment;
 std::vector <float> ranges;
