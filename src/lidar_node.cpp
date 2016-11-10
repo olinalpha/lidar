@@ -19,13 +19,21 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
     angle_increment = msg->angle_increment;
     ranges = msg->ranges;
     minimum = 20000;
-    for(int i = (-angle_min / (angle_threshold/2)) / angle_increment; i < angle_threshold / angle_increment; i++){
+    int start_index = (-angle_min / (angle_threshold/2)) / angle_increment;
+    int end_index = angle_threshold / angle_increment;
+    for(int i = start_index; i < end_index ; i++){
         if (ranges[i] < minimum){
                     minimum = ranges[i];
 
                     //std::cout << minimum<< std::endl;
             }
     }
+
+    std::cout << "----- indices ----" << std::endl;
+    std::cout << start_index << std::endl;
+    std::cout << end_index << std::endl;
+
+
     velocity = (minimum - 0.5)*255;
     if (velocity < 0){
         velocity = 0;
