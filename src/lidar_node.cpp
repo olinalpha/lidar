@@ -13,14 +13,16 @@ float angle_min;
 float angle_increment;
 std::vector <float> ranges;
 float minimum;
+int zero_index;
 void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
 {
     angle_min = msg->angle_min;
     angle_increment = msg->angle_increment;
+    zero_index = -angle_min / angle_increment;
     ranges = msg->ranges;
     minimum = 20000;
-    int start_index = (-angle_min / (angle_threshold/2)) / angle_increment;
-    int end_index = angle_threshold / angle_increment;
+    int start_index = zero_index - (angle_threshold/2)/angle_increment;
+    int end_index = zero_index + (angle_threshold/2)/angle_increment;
     for(int i = start_index; i < end_index ; i++){
         if (ranges[i] < minimum){
                     minimum = ranges[i];
