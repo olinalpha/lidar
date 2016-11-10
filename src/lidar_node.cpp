@@ -23,10 +23,10 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
         if (ranges[i] < minimum){
                     minimum = ranges[i];
 
-                    std::cout << minimum<< std::endl;
+                    //std::cout << minimum<< std::endl;
             }
     }
-    velocity = (minimum - 1)*255;
+    velocity = (minimum - 0.5)*255;
     if (velocity < 0){
         velocity = 0;
     }
