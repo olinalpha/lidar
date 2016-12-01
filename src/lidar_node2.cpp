@@ -52,7 +52,7 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 
     std::vector<float> obsTurnArray(11);
     bool withinStep = true;
-    float rMin = 5;
+    float rMin = 2.5;
     std::vector<float> rMinArray(11, rMin);
     for (int i = 0; i < xlengthArray.size(); i++) {
         int intIndex = int((xlengthArray[i].x + robotLengthTolerance + robotLength / 2) * 11 /
@@ -68,19 +68,19 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
         obsTurnArray[i] = -(rMin - rMinArray[i]) * turnScaleFactor;
     }
 
-    float closestDistance = obsTurnArray[0];
-    for (int i = 0; i < obsTurnArray.size(); i++) {
-        if (obsTurnArray[i] < closestDistance) {
-            closestDistance = obsTurnArray[i];
+    float closestDistance = rMinArray[0];
+    for (int i = 0; i < rMinArray.size(); i++) {
+        if (rMinArray[i] < closestDistance) {
+            closestDistance = rMinArray[i];
         }
     }
+    std::cout << closestDistance << std::endl;
 
     std::vector<float> obsVelArray(11);
 
     int velocityIndex;
-    float maxVelIndex = 8.0;
 
-    velocityIndex = (closestDistance + 11) * (maxVelIndex/11);
+    velocityIndex = int((closestDistance/rMin)*11) + 5;
     if (velocityIndex > 10) {
         velocityIndex = 10;
     }
@@ -97,13 +97,13 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     std_msgs::Float32MultiArray msg_out;
     msg_out.data = finalObsArray;
 
-    for (int i = 0; i < 22; i++) {
-        std::cout << finalObsArray[i];
-        std::cout << ", ";
-        if (i == 21){
-            std::cout << "" << std::endl;
-        }
-    }
+//    for (int i = 0; i < 22; i++) {
+//        std::cout << finalObsArray[i];
+//        std::cout << ", ";
+//        if (i == 21){
+//            std::cout << "" << std::endl;
+//        }
+//    }
 
     velocity_data_ptr->publish(msg_out);
 
@@ -122,6 +122,7 @@ int main(int argc, char **argv)
      * part of the ROS system.
      */
     ros::init(argc, argv, "listener");
+    std::cout << "Initializing" << std::endl;
 
     /**
      * NodeHandle is the main access point to communications with the ROS system.
@@ -147,6 +148,7 @@ int main(int argc, char **argv)
      */
     ros::Subscriber sub = n.subscribe("scan", 1000, chatterCallback);
     ros::Publisher velocity_data = n.advertise<std_msgs::Float32MultiArray>("obst/cmd_vel", 1000);
+    std::cout << "Streaming Data" << std::endl;
     velocity_data_ptr = &velocity_data;
 
     /**
