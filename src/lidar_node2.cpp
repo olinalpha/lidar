@@ -37,14 +37,8 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     int startIndex = zeroIndex - (angleThreshold / 2) / angleIncrement; //limits to angleThreshold
     int endIndex = zeroIndex + (angleThreshold / 2) / angleIncrement;   //limits to angleThreshold
 
-//    std::cout << startIndex;
-//    std::cout << "   ";
-    //std::cout << zeroIndex << std::endl;
     for (int i = endIndex; i > startIndex; i--) {
-
-        //std::cout << sin((zeroIndex - i) * angleIncrement) << std::endl;
         if (ranges[i] > .03) {
-//std::cout << ranges[endIndex] << std::endl;
             float currentAngle = (zeroIndex - i) * angleIncrement;
             float x = ranges[i] * sin(currentAngle);
             if (abs(x) < robotLength / 2 + robotLengthTolerance) {
@@ -55,9 +49,6 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
             }
         }
     }
-    //std::sort(xlengthArray.begin(), xlengthArray.end(), whichisbigger);
-
-    //std::cout << xlengthArray[10].x << std::endl;
 
     std::vector<float> obsTurnArray(11);
     bool withinStep = true;
@@ -92,6 +83,9 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     velocityIndex = (closestDistance + 11) * (maxVelIndex/11);
     if (velocityIndex > 10) {
         velocityIndex = 10;
+    }
+    else if (velocityIndex < 0){
+        velocityIndex = 0;
     }
 
     obsVelArray[velocityIndex] = 1;
