@@ -52,7 +52,7 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 
     std::vector<float> obsTurnArray(11);
     bool withinStep = true;
-    float rMin = 2.5;
+    float rMin = .5;
     std::vector<float> rMinArray(11, rMin);
     for (int i = 0; i < xlengthArray.size(); i++) {
         int intIndex = int((xlengthArray[i].x + robotLengthTolerance + robotLength / 2) * 11 /
@@ -65,7 +65,42 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     }
 
     for (int i = 0; i < rMinArray.size(); i++) {
-        obsTurnArray[i] = -(rMin - rMinArray[i]) * turnScaleFactor;
+//        obsTurnArray[i] = -(rMin - rMinArray[i]) * turnScaleFactor;
+        float turnValue = (rMin - rMinArray[i]) * turnScaleFactor;
+        switch(i){
+            case 0:
+                obsTurnArray[6] = turnValue;
+                break;
+            case 1:
+                obsTurnArray[7] = turnValue;
+                break;
+            case 2:
+                obsTurnArray[8] = turnValue;
+                break;
+            case 3:
+                obsTurnArray[9] = turnValue;
+                break;
+            case 4:
+            case 5:
+                obsTurnArray[10] = turnValue;
+                break;
+            case 6:
+                obsTurnArray[0] = turnValue;
+                break;
+            case 7:
+                obsTurnArray[1] = turnValue;
+                break;
+            case 8:
+                obsTurnArray[2] = turnValue;
+                break;
+            case 9:
+                obsTurnArray[3] = turnValue;
+                break;
+            case 10:
+                obsTurnArray[4] = turnValue;
+                break;
+        }
+
     }
 
     float closestDistance = rMinArray[0];
@@ -74,7 +109,7 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
             closestDistance = rMinArray[i];
         }
     }
-    std::cout << closestDistance << std::endl;
+    //std::cout << closestDistance << std::endl;
 
     std::vector<float> obsVelArray(11);
 
@@ -90,6 +125,8 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 
     obsVelArray[velocityIndex] = 1;
 
+
+
     std::vector<float> finalObsArray;
     finalObsArray.insert(finalObsArray.end(), obsVelArray.begin(), obsVelArray.end() );
     finalObsArray.insert(finalObsArray.end(), obsTurnArray.begin(), obsTurnArray.end() );
@@ -97,13 +134,13 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     std_msgs::Float32MultiArray msg_out;
     msg_out.data = finalObsArray;
 
-//    for (int i = 0; i < 22; i++) {
-//        std::cout << finalObsArray[i];
-//        std::cout << ", ";
-//        if (i == 21){
-//            std::cout << "" << std::endl;
-//        }
-//    }
+    for (int i = 11; i < 22; i++) {
+        std::cout << finalObsArray[i];
+        std::cout << ", ";
+        if (i == 21){
+            std::cout << "" << std::endl;
+        }
+    }
 
     velocity_data_ptr->publish(msg_out);
 

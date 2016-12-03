@@ -128,7 +128,7 @@ include_directories(
 # add_dependencies(lidar ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-add_executable(lidar_node src/lidar_node.cpp src/lidar_node.cpp src/lidar_node2.cpp)
+add_executable(lidar_node src/lidar_node.cpp src/lidar_node.cpp src/lidar_node2.cpp src/lidar_node3.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
