@@ -52,7 +52,7 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 
     std::vector<float> obsTurnArray(11);
     bool withinStep = true;
-    float rMin = .5;
+    float rMin = 2;
     std::vector<float> rMinArray(11, rMin);
     for (int i = 0; i < xlengthArray.size(); i++) {
         int intIndex = int((xlengthArray[i].x + robotLengthTolerance + robotLength / 2) * 11 /
