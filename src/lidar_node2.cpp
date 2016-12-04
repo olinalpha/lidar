@@ -104,7 +104,7 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     }
 
     float closestDistance = rMinArray[0];
-    for (int i = 0; i < rMinArray.size(); i++) {
+    for (int i = 4; i < 6; i++) {
         if (rMinArray[i] < closestDistance) {
             closestDistance = rMinArray[i];
         }
