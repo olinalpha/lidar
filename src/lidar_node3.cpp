@@ -16,7 +16,7 @@
 ros::Publisher *velocity_data_ptr;
 
 float robotLength = 0.5; // meters
-float robotLengthTolerance = 0.1; //meters
+float robotLengthTolerance = 0.4; //meters
 float totalDetectionWidth = robotLength + robotLengthTolerance; // meters
 int turnScaleFactor = 2;
 float angleThreshold = 180 * (PI / 180);
@@ -29,6 +29,7 @@ int smallestDetectionRange = .5;
 struct XandRValues{
     float x;
     float r;
+    float theta;
 };
 XandRValues data;
 
@@ -38,8 +39,8 @@ float scaleWeightValues(float input) {
     if (output < 0){
         return 0;
     }
-    if (output > 4){
-        return 4;
+    if (output > 5){
+        return 5;
     }
     return output;
 }
@@ -65,13 +66,13 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
             if (x > 0) {
                 data.x = x;
                 data.r = ranges[i];
+                data.theta = currentAngle*180/PI;
                 rightValues.push_back(data);
             }else{
-                if(x < 0){
-                    data.x = -x;
-                    data.r = ranges[i];
-                    leftValues.push_back(data);
-                }
+                data.x = -x;
+                data.r = ranges[i];
+                data.theta = -currentAngle*180/PI;
+                leftValues.push_back(data);
             }
         }
     }
@@ -84,8 +85,8 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 
     float rMinRobot = rMin;
     float weight = 0;
-    float stepDistance = .3; //width of each step in meters, to be added onto the weight.
-    float stepIndex = 0;
+    float stepAngle = 5; //width of each step in meters, to be added onto the weight.
+    int stepIndex = 0;
     int position = 0;
     float trueRMin = rMin;
     float rMinRight = rMin;
@@ -104,13 +105,14 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
                 trueRMin = rMinRobot;
             }
         }else{
-
-            if(stepIndex*stepDistance - rightValues[i].x > stepDistance){
+            //std::cout << rightValues[i].theta << std::endl;
+            if(stepIndex*stepAngle - rightValues[i].theta > stepAngle){
                 if(rightValues[i].r < rMinRight) {
                     rMinRight = rightValues[i].r;
                 }
             }else{
-                weight += scaleWeightValues(rMinRobot)/19;
+                weight += scaleWeightValues(rMinRight)/19;
+                std::cout << scaleWeightValues(rMinRight)/19 << std::endl;
                 stepIndex ++;
                 rMinRight = rMin;
             }
@@ -134,12 +136,12 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
             }
         }else{
 
-            if(stepIndex*stepDistance - leftValues[i].x > stepDistance){
+            if(stepIndex*stepAngle - leftValues[i].theta > stepAngle){
                 if(leftValues[i].r < rMinLeft) {
                     rMinLeft = leftValues[i].r;
                 }
             }else{
-                weight += scaleWeightValues(rMinRobot)/19;
+                weight += scaleWeightValues(rMinLeft)/19;
                 stepIndex ++;
                 rMinLeft = rMin;
             }
