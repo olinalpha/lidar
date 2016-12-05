@@ -16,7 +16,7 @@
 ros::Publisher *velocity_data_ptr;
 
 float robotLength = 0.5; // meters
-float robotLengthTolerance = 0.4; //meters
+float robotLengthTolerance = 0.1; //meters
 float totalDetectionWidth = robotLength + robotLengthTolerance; // meters
 int turnScaleFactor = 2;
 float angleThreshold = 120 * (PI / 180);
