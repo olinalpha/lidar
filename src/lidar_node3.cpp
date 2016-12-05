@@ -115,7 +115,7 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 
     //std::cout << rMinRobot << std::endl;
     position = int(scaleWeightValues(rMinRobot));
-    std::cout << position << std::endl;
+    //std::cout << position << std::endl;
     obsTurnArray[5 - position] = (weight/100);
     stepIndex = 0;
     weight = 0;
@@ -143,7 +143,7 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     }
     position = int(scaleWeightValues(rMinRobot));
 
-    std::cout << position << std::endl;
+    //std::cout << position << std::endl;
     obsTurnArray[5 + position] = (weight/100);
     obsTurnArray[5] = .01;
     std::vector<float> obsVelArray(11);
@@ -151,6 +151,7 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     int velocityIndex;
 
     velocityIndex = int((trueRMin/rMin)*11) + 5;
+    std::cout << velocityIndex << std::endl;
     if (velocityIndex > 10) {
         velocityIndex = 10;
     }
