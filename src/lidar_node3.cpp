@@ -87,9 +87,9 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     float stepDistance = .3; //width of each step in meters, to be added onto the weight.
     float stepIndex = 0;
     int position = 0;
-    int trueRMin = rMin;
-    int rMinRight = rMin;
-    int rMinLeft = rMin;
+    float trueRMin = rMin;
+    float rMinRight = rMin;
+    float rMinLeft = rMin;
     //Runs through values, if within half robot length, we grab that r value. The position depends on inverse squared.
     //In addition, runs through the rest of the values, as a step. We add these values onto the weight of the thing.
     for (int i = 0; i < rightValues.size(); i++) {
@@ -106,7 +106,7 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
                     rMinRight = rightValues[i].r;
                 }
             }else{
-                weight += scaleWeightValues(rMinRobot);
+                weight += scaleWeightValues(rMinRobot)/19;
                 stepIndex ++;
                 rMinRight = 5;
             }
@@ -116,7 +116,7 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     //std::cout << rMinRobot << std::endl;
     position = int(scaleWeightValues(rMinRobot));
     //std::cout << position << std::endl;
-    obsTurnArray[5 - position] = (weight/100);
+    obsTurnArray[5 - position] = (weight/10);
     stepIndex = 0;
     weight = 0;
     rMinRobot = rMin;
@@ -125,7 +125,7 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
         if (leftValues[i].x < totalDetectionWidth/2){
             if(leftValues[i].r < rMinRobot){
                 rMinRobot = leftValues[i].r;
-                weight = scaleWeightValues(rMinRobot);
+                weight = scaleWeightValues(rMinRobot)/19;
                 trueRMin = rMinRobot;
             }
         }else{
@@ -144,14 +144,14 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     position = int(scaleWeightValues(rMinRobot));
 
     //std::cout << position << std::endl;
-    obsTurnArray[5 + position] = (weight/100);
+    obsTurnArray[5 + position] = (weight/10);
     obsTurnArray[5] = .01;
     std::vector<float> obsVelArray(11);
 
     int velocityIndex;
 
     velocityIndex = int((trueRMin/rMin)*11) + 5;
-    std::cout << velocityIndex << std::endl;
+    std::cout << trueRMin << std::endl;
     if (velocityIndex > 10) {
         velocityIndex = 10;
     }
