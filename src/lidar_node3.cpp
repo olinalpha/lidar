@@ -111,8 +111,8 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
                     rMinRight = rightValues[i].r;
                 }
             }else{
-                weight += scaleWeightValues(rMinRight)/19;
-                std::cout << scaleWeightValues(rMinRight)/19 << std::endl;
+                weight += scaleWeightValues(rMinRight);
+                std::cout << scaleWeightValues(rMinRight) << std::endl;
                 stepIndex ++;
                 rMinRight = rMin;
             }
@@ -141,7 +141,7 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
                     rMinLeft = leftValues[i].r;
                 }
             }else{
-                weight += scaleWeightValues(rMinLeft)/19;
+                weight += scaleWeightValues(rMinLeft);
                 stepIndex ++;
                 rMinLeft = rMin;
             }
