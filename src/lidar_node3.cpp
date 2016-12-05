@@ -32,14 +32,14 @@ struct XandRValues{
 };
 XandRValues data;
 
-float scaleWeightValues(float value) {
+float scaleWeightValues(float input) {
     //returns a value, where higher radius value = lower  return value (between 0 and 5)
-    float output = 5 - (sqrt(value) * (5 + smallestDetectionRange) / sqrt(rMin) - smallestDetectionRange);
+    float output = 5 - (pow(input , 2) * (5 + smallestDetectionRange) / pow(rMin, 2) - smallestDetectionRange);
     if (output < 0){
         return 0;
     }
-    if (output > 5){
-        return 5;
+    if (output > 4){
+        return 4;
     }
     return output;
 }
