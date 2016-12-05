@@ -34,6 +34,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4f7d1111-5c77-456c-9279-afb6d0116cb6" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/lidar_node3.cpp" afterPath="$PROJECT_DIR$/src/lidar_node3.cpp" />
     </list>
     <ignored path="lidar.iws" />
@@ -67,8 +68,8 @@
       <file leaf-file-name="lidar_node3.cpp" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/lidar_node3.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="561">
-              <caret line="41" column="17" selection-start-line="41" selection-start-column="17" selection-end-line="41" selection-end-column="17" />
+            <state relative-caret-position="345">
+              <caret line="116" column="9" selection-start-line="116" selection-start-column="9" selection-end-line="116" selection-end-column="9" />
               <folding />
             </state>
           </provider>
@@ -116,7 +117,7 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-1853" />
+    <option name="x" value="67" />
     <option name="y" value="24" />
     <option name="width" value="1853" />
     <option name="height" value="1056" />
@@ -516,15 +517,15 @@
       <workItem from="1480802190609" duration="1929000" />
       <workItem from="1480883997086" duration="91000" />
       <workItem from="1480884186400" duration="11977000" />
-      <workItem from="1480904749687" duration="1820000" />
+      <workItem from="1480904749687" duration="3864000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="62120000" />
+    <option name="totallyTimeSpent" value="64164000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-1853" y="24" width="1853" height="1056" extended-state="6" />
+    <frame x="67" y="24" width="1853" height="1056" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.11980572" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -903,8 +904,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/lidar_node3.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="561">
-          <caret line="41" column="17" selection-start-line="41" selection-start-column="17" selection-end-line="41" selection-end-column="17" />
+        <state relative-caret-position="345">
+          <caret line="116" column="9" selection-start-line="116" selection-start-column="9" selection-end-line="116" selection-end-column="9" />
           <folding />
         </state>
       </provider>

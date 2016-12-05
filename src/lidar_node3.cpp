@@ -92,6 +92,10 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     float rMinLeft = rMin;
     //Runs through values, if within half robot length, we grab that r value. The position depends on inverse squared.
     //In addition, runs through the rest of the values, as a step. We add these values onto the weight of the thing.
+
+    //--------------------//
+    //RIGHT SIDE OF ROBOT//
+    //-------------------//
     for (int i = 0; i < rightValues.size(); i++) {
         if (rightValues[i].x < totalDetectionWidth/2){
             if(rightValues[i].r < rMinRobot){
@@ -108,7 +112,7 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
             }else{
                 weight += scaleWeightValues(rMinRobot)/19;
                 stepIndex ++;
-                rMinRight = 5;
+                rMinRight = rMin;
             }
         }
     }
@@ -125,7 +129,7 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
         if (leftValues[i].x < totalDetectionWidth/2){
             if(leftValues[i].r < rMinRobot){
                 rMinRobot = leftValues[i].r;
-                weight = scaleWeightValues(rMinRobot)/19;
+                weight = scaleWeightValues(rMinRobot);
                 trueRMin = rMinRobot;
             }
         }else{
@@ -135,9 +139,9 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
                     rMinLeft = leftValues[i].r;
                 }
             }else{
-                weight += scaleWeightValues(rMinRobot);
+                weight += scaleWeightValues(rMinRobot)/19;
                 stepIndex ++;
-                rMinLeft = 5;
+                rMinLeft = rMin;
             }
         }
     }
