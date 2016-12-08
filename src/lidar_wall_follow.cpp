@@ -6,6 +6,7 @@
 #include "sensor_msgs/LaserScan.h"
 #include "sensor_msgs/Imu.h"
 #include "std_msgs/Float32MultiArray.h"
+#include "std_msgs/Float32.h"
 #include <math.h>
 
 #define PI 3.1415926535
@@ -27,13 +28,14 @@ float maxDetectionRange;
 float angleThreshold = 120 * (PI/180.0);
 float gapDetectionAngle = 80 * (PI/180.0);
 float gapDetectionSliceOffset = 5 * (PI/180);
-const float gapThreshold = 1.0;
+const float gapThreshold = 1.25;
 int velocityIndex;
 int turnIndex;
 float dangerDistance = 0.5;
 float previousDistance = 1.0;
 bool goStraight = false;
 
+float now;
 float gapTriggerTime;
 
 std::vector<float> heading_history;
@@ -47,21 +49,19 @@ std::vector<float> gapHeadingAverage(10);
 
 
 void imudata(const std_msgs::Float32ConstPtr& msg){
-    currentDataIMU = msg.data;
+    currentDataIMU = msg->data;
     if(!goStraight){
 
         heading_history.push_back(currentDataIMU);
         if(heading_history.size() > 10){
-            heading_history.erase(0);
+            heading_history.erase(heading_history.begin());
         }
     }
 }
 
 void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 
-    float now = ros::Time::now().toSec();
-
-    if(now - gapTriggerTime < 5.0) {
+    if(now - gapTriggerTime > 5.0 && goStraight) {
         goStraight = false;
         return;
     }
@@ -90,9 +90,6 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     else if (velocityIndex < 5){
         velocityIndex = 5;
     }
-
-    std::vector<float> obsVelArray(11);
-    obsVelArray[velocityIndex] = 1.0;
 
     //std::cout << ranges[detectionDegreeIndex] << std::endl;
     std::cout << optimalRange << std::endl;
@@ -123,10 +120,10 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 
     gapAvg /= (float)counter;
     //std::cout << gapDetectionIndex << std::endl;
-    if(abs(previousDistance - gapAvg) > gapThreshold){
+    if(gapAvg - previousDistance > gapThreshold && !goStraight){
         goStraight = true;
+        now = ros::Time::now().toSec();
 		std::cout<<"GAP!"<<std::endl;
-        gapTriggerTime = ros::Time::now().toSec();
     }
 
     if(goStraight){
@@ -136,14 +133,20 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
         }
         float desiredHeading = avg /= heading_history.size();
         int headingScale = 2;
-        turnIndex = int(headingScale(((desiredHeading - currentDataIMU)*11.0)) + 5);
-        if (turnIndex > 10){
-            turnIndex = 10;
+        turnIndex = int(headingScale*(((desiredHeading - currentDataIMU)*11.0)) + 5);
+        if (turnIndex > 8){
+            turnIndex = 8;
         }
-        else if (turnIndex < 0){
-            turnIndex = 0;
+        else if (turnIndex < 2){
+            turnIndex = 2;
         }
+        velocityIndex = 8;
+        std::cout<<turnIndex<<std::endl;
+        gapTriggerTime = ros::Time::now().toSec();
     }
+
+    std::vector<float> obsVelArray(11);
+    obsVelArray[velocityIndex] = 1.0;
 
     obsTurnArray[turnIndex] = 1.0;
 
@@ -208,7 +211,7 @@ int main(int argc, char **argv)
      * away the oldest ones.
      */
     ros::Subscriber sub = n.subscribe("scan", 1000, chatterCallback);
-    ros::Subscriber sub = n.subscribe("imu/heading", 1000, imudata);
+    ros::Subscriber sub2 = n.subscribe("imu/heading", 1000, imudata);
     ros::Publisher velocity_data = n.advertise<std_msgs::Float32MultiArray>("wall/cmd_vel", 1000);
     std::cout << "Streaming Data" << std::endl;
     velocity_data_ptr = &velocity_data;

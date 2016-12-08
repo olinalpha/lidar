@@ -34,7 +34,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4f7d1111-5c77-456c-9279-afb6d0116cb6" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/lidar_wall_follow.cpp" afterPath="$PROJECT_DIR$/src/lidar_wall_follow.cpp" />
     </list>
     <ignored path="lidar.iws" />
@@ -78,8 +77,8 @@
       <file leaf-file-name="lidar_wall_follow.cpp" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/lidar_wall_follow.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="373">
-              <caret line="55" column="9" selection-start-line="55" selection-start-column="9" selection-end-line="55" selection-end-column="9" />
+            <state relative-caret-position="684">
+              <caret line="143" column="40" selection-start-line="143" selection-start-column="40" selection-end-line="143" selection-end-column="40" />
               <folding />
             </state>
           </provider>
@@ -128,7 +127,7 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="67" />
+    <option name="x" value="-1853" />
     <option name="y" value="52" />
     <option name="width" value="926" />
     <option name="height" value="1028" />
@@ -535,15 +534,15 @@
       <workItem from="1481165583560" duration="3362000" />
       <workItem from="1481169058166" duration="11833000" />
       <workItem from="1481189010468" duration="11000" />
-      <workItem from="1481191079021" duration="4964000" />
+      <workItem from="1481191079021" duration="7989000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="90983000" />
+    <option name="totallyTimeSpent" value="94008000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="67" y="52" width="926" height="1028" extended-state="4" />
+    <frame x="-1853" y="52" width="926" height="1028" extended-state="4" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.23974082" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -986,8 +985,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/lidar_wall_follow.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="373">
-          <caret line="55" column="9" selection-start-line="55" selection-start-column="9" selection-end-line="55" selection-end-column="9" />
+        <state relative-caret-position="684">
+          <caret line="143" column="40" selection-start-line="143" selection-start-column="40" selection-end-line="143" selection-end-column="40" />
           <folding />
         </state>
       </provider>
