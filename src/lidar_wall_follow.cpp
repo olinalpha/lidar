@@ -4,6 +4,7 @@
 
 #include "ros/ros.h"
 #include "sensor_msgs/LaserScan.h"
+#include "sensor_msgs/Imu.h"
 #include "std_msgs/Float32MultiArray.h"
 #include <math.h>
 
@@ -18,7 +19,7 @@ ros::Publisher *velocity_data_ptr;
 float robotLength = 0.5; // meters
 float robotLengthTolerance = 0.1; //meters
 float totalDetectionWidth = robotLength + robotLengthTolerance; // meters
-float optimalRange = 1.25;
+float optimalRange = 1.75;
 float detectionAngle = 85 * (PI/180.0);
 float detectionAngleSliceOffset = 5 * (PI/180);
 float detectionRange;
@@ -32,11 +33,39 @@ int turnIndex;
 float dangerDistance = 0.5;
 float previousDistance = 1.0;
 bool goStraight = false;
+
+float gapTriggerTime;
+
+std::vector<float> heading_history;
+float currentDataIMU = 0.0;
+
+std::vector<float> gapHeadingAverage(10);
 //Output of 11 values, robot vision split in to two, left and right. Object detected on left side = turn right, object on
 //right = turn left. position in 11 val array moves based on how close the object is in the left/right detection. weight is determined by
 //outside of the range, of x positions, value gets a sum based off of other values.
 
+
+
+void imudata(const std_msgs::Float32ConstPtr& msg){
+    currentDataIMU = msg.data;
+    if(!goStraight){
+
+        heading_history.push_back(currentDataIMU);
+        if(heading_history.size() > 10){
+            heading_history.erase(0);
+        }
+    }
+}
+
 void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
+
+    float now = ros::Time::now().toSec();
+
+    if(now - gapTriggerTime < 5.0) {
+        goStraight = false;
+        return;
+    }
+
     float angleMin = msg->angle_min;
     float angleIncrement = msg->angle_increment;
     int zeroIndex = -angleMin / angleIncrement;
@@ -85,23 +114,36 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
         turnIndex = 2;
     }
 
-//    int counter = 0;
-//    float gapAvg = 0.0;
-//    for(int i = gapDetectionIndex + gapDetectionSliceOffset; i > gapDetectionIndex - gapDetectionSliceOffset; i--){
-//        counter++;
-//        gapAvg += ranges[i];
-//    }
-//
-//    gapAvg /= (float)counter;
-//    //std::cout << gapDetectionIndex << std::endl;
-//    if(abs(previousDistance - gapAvg) > gapThreshold){
-//        goStraight = !goStraight;
-//		std::cout<<"GAP!"<<std::endl;
-//    }
-//
-//    if(goStraight){
-//        turnIndex = 5;
-//    }
+    int counter = 0;
+    float gapAvg = 0.0;
+    for(int i = gapDetectionIndex + gapDetectionSliceOffset; i > gapDetectionIndex - gapDetectionSliceOffset; i--){
+        counter++;
+        gapAvg += ranges[i];
+    }
+
+    gapAvg /= (float)counter;
+    //std::cout << gapDetectionIndex << std::endl;
+    if(abs(previousDistance - gapAvg) > gapThreshold){
+        goStraight = true;
+		std::cout<<"GAP!"<<std::endl;
+        gapTriggerTime = ros::Time::now().toSec();
+    }
+
+    if(goStraight){
+        float avg=0;
+        for(int i=0; i<heading_history.size(); ++i){
+            avg += heading_history[i];
+        }
+        float desiredHeading = avg /= heading_history.size();
+        int headingScale = 2;
+        turnIndex = int(headingScale(((desiredHeading - currentDataIMU)*11.0)) + 5);
+        if (turnIndex > 10){
+            turnIndex = 10;
+        }
+        else if (turnIndex < 0){
+            turnIndex = 0;
+        }
+    }
 
     obsTurnArray[turnIndex] = 1.0;
 
@@ -166,6 +208,7 @@ int main(int argc, char **argv)
      * away the oldest ones.
      */
     ros::Subscriber sub = n.subscribe("scan", 1000, chatterCallback);
+    ros::Subscriber sub = n.subscribe("imu/heading", 1000, imudata);
     ros::Publisher velocity_data = n.advertise<std_msgs::Float32MultiArray>("wall/cmd_vel", 1000);
     std::cout << "Streaming Data" << std::endl;
     velocity_data_ptr = &velocity_data;
