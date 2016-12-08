@@ -155,7 +155,7 @@ int main(int argc, char **argv)
      * away the oldest ones.
      */
     ros::Subscriber sub = n.subscribe("scan", 1000, chatterCallback);
-    ros::Publisher velocity_data = n.advertise<std_msgs::Float32MultiArray>("obst/cmd_vel", 1000);
+    ros::Publisher velocity_data = n.advertise<std_msgs::Float32MultiArray>("wall/cmd_vel", 1000);
     std::cout << "Streaming Data" << std::endl;
     velocity_data_ptr = &velocity_data;
 
