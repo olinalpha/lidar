@@ -25,6 +25,7 @@ float detectionRange;
 float maxDetectionRange;
 float angleThreshold = 120 * (PI/180.0);
 float gapDetectionAngle = 80 * (PI/180.0);
+float gapDetectionSliceOffset = 5 * (PI/180);
 const float gapThreshold = 1.0;
 int velocityIndex;
 int turnIndex;
@@ -83,8 +84,17 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     else if (turnIndex < 2){
         turnIndex = 2;
     }
+
+    int counter = 0;
+    float gapAvg = 0.0;
+    for(int i = gapDetectionIndex + gapDetectionSliceOffset; i > gapDetectionIndex - gapDetectionSliceOffset; i--){
+        counter++;
+        gapAvg += ranges[i];
+    }
+
+    gapAvg /= (float)counter;
     //std::cout << gapDetectionIndex << std::endl;
-    if(abs(previousDistance - ranges[gapDetectionIndex]) > gapThreshold){
+    if(abs(previousDistance - gapAvg) > gapThreshold){
         goStraight = !goStraight;
 		std::cout<<"GAP!"<<std::endl;
     }
@@ -95,7 +105,7 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 
     obsTurnArray[turnIndex] = 1.0;
 
-    previousDistance = ranges[gapDetectionIndex];
+    previousDistance = gapAvg;
 
     std::reverse(obsTurnArray.begin(), obsTurnArray.end());
 
