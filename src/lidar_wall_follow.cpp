@@ -35,8 +35,8 @@ float dangerDistance = 0.5;
 float previousDistance = 1.0;
 bool goStraight = false;
 
-float now;
-float gapTriggerTime;
+float now = 0;
+float gapTriggerTime = 0;
 
 std::vector<float> heading_history;
 float currentDataIMU = 0.0;
@@ -104,11 +104,11 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 
     turnIndex = int((detectionRange/optimalRange)*11) - 6;
     std::vector<float> obsTurnArray(11);
-    if (turnIndex > 8) {
-        turnIndex = 8;
+    if (turnIndex > 7) {
+        turnIndex = 7;
     }
-    else if (turnIndex < 2){
-        turnIndex = 2;
+    else if (turnIndex < 3){
+        turnIndex = 3;
     }
 
     int counter = 0;
@@ -132,7 +132,7 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
             avg += heading_history[i];
         }
         float desiredHeading = avg /= heading_history.size();
-        int headingScale = 2;
+        int headingScale = 1;
         turnIndex = int(headingScale*(((desiredHeading - currentDataIMU)*11.0)) + 5);
         if (turnIndex > 8){
             turnIndex = 8;
@@ -150,7 +150,7 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 
     obsTurnArray[turnIndex] = 1.0;
 
-//    previousDistance = gapAvg;
+    previousDistance = gapAvg;
 
     std::reverse(obsTurnArray.begin(), obsTurnArray.end());
 
