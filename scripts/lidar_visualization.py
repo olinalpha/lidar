@@ -2,11 +2,11 @@ import rospy
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Vector3Stamped
 from std_msgs.msg import Float32MultiArray
-import numpy as np
-import pygame
-import time
+#import numpy as np
+#import pygame
+#import time
 import math
-import sys
+#import sys
 #from rdp import rdp
     
 class LaserVisualization:
@@ -70,9 +70,9 @@ class LaserVisualization:
 
         for i in range(len(self.ranges)):
             if i in noise_index_array:
-                color = pygame.Color('red')
+                #color = pygame.Color('red')
             else:
-                color = pygame.Color('blue')
+                #color = pygame.Color('blue')
             self.current_angle = i*self.angle_increment + self.angle_min
             if(not math.isnan(self.ranges[i])):
                 x = -int(self.ranges[i]*math.sin(self.current_angle)*self.scaling)
