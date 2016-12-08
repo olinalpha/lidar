@@ -32,9 +32,9 @@ class IMUHeading:
         else:
             self.difference = self.previous_heading - self.heading
             self.updated_heading = False
-        if(abs(self.difference) < self.threshold):
-            self.previous_heading = self.heading
-            self.updated_heading = False
+            if(abs(self.difference) < self.threshold):
+                self.previous_heading = self.heading
+                self.updated_heading = False
         self.turn_array = [0]*11
         index = int(self.difference * 7/(math.pi/6))
         if index < -4:
@@ -42,7 +42,7 @@ class IMUHeading:
         if index > 4:
             index = 5
         print 'test'
-        self.turn_array[5 + index] = .02
+        self.turn_array[5 - index] = .02
         msg = Float32MultiArray()
         vel_array = [0]*11
         total_array = vel_array
