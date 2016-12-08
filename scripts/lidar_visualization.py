@@ -32,6 +32,9 @@ class LaserVisualization:
         self.cone_detection_threshold = .02 #in meters
         self.cone_detection_jump = .3 # in meters
         self.center = (self.model.width/2, self.model.height/2)
+        self.heading_point = self.center
+        self.cycle = 0
+        self.total_cycle = 0
     def imu_callback(self, scan):
         if(not math.isnan(scan.vector.z)):
             #self.heading_y = scan.vector.y*200
@@ -117,58 +120,98 @@ class LaserVisualization:
                 pygame.draw.line(self.screen, pygame.Color('green'), self.center, point, 3)"""
             pygame.draw.circle(self.screen, color, (x + self.model.width/2,y + self.model.height/2), 2)
         #print self.heading_x
-        rdp_array = dpa.rdp(xAndYArray, 3)
-        print rdp_array
-        line_array = []
-        for i in range(len(rdp_array)):
-            #print rdp_array[i]
-            x = rdp_array[i][0]
-            y = rdp_array[i][1]
-            pygame.draw.circle(self.screen, pygame.Color('green'), (x,y), 2)
-            for j in range(i, len(rdp_array)):
-                x1 = rdp_array[i][0]
-                y1 = rdp_array[i][1]
-                x2 = rdp_array[j][0]
-                y2 = rdp_array[j][1]
-                length = dpa.distance((x1, y1),(x2, y2))
-                if((x2 -x1) != 0 and length < (10*self.scaling)and length > (.5*self.scaling)):
-                    slope = (y2-y1)/(x2-x1)
-                    line_array.append(Line(x1, y1, x2, y2, self.get_angle((y2, y1), (x2, x1))))
-        #for i in renage(len(slope_array)):
+        if(len(xAndYArray) > 0):
+            rdp_array = dpa.rdp(xAndYArray, 2)
+        #print rdp_array
+            line_array = []
+            for i in range(len(rdp_array)):
+                #print rdp_array[i]
+                x = rdp_array[i][0]
+                y = rdp_array[i][1]
+                pygame.draw.circle(self.screen, pygame.Color('green'), (x,y), 2)
+                for j in range(i, len(rdp_array)):
+                    x1 = rdp_array[i][0]
+                    y1 = rdp_array[i][1]
+                    x2 = rdp_array[j][0]
+                    y2 = rdp_array[j][1]
+                    length = dpa.distance((x1, y1),(x2, y2))
+                    if((x2 -x1) != 0 and length < (10*self.scaling)and length > (.5*self.scaling)):
+                        slope = (y2-y1)/(x2-x1)
+                        line_array.append(Line(x1, y1, x2, y2, self.get_angle((x1, y1), (x2, y2))))
+            #for i in renage(len(slope_array)):
 
-        for i, line in enumerate(line_array):
-            #line.reset_dots()
-            for i, point in enumerate(xAndYArray):
-                distance_to_line = dpa.point_line_distance((point[0], point[1]), (line.x1, line.y1), (line.x2, line.y2))
-                distance_to_start = dpa.distance((point[0], point[1]),(line.x1, line.y1))
-                if (distance_to_line < .14*self.scaling and distance_to_line > 0):
-                    #print distance_to_line
-                    line.number_of_dots += 1
-                    line.total_distance_to_start += distance_to_start
-            #print line.number_of_dots
-            line_distance = dpa.distance((line.x1, line.y1), (line.x2, line.y2))
-            if(line.number_of_dots > 5 and line_distance/line.number_of_dots < 1.5):
-            #(line.number_of_dots > 30 and line.total_distance_to_start/line.number_of_dots < 1.5*self.scaling):
-                pygame.draw.line(self.screen, pygame.Color('red'), (line.x1, line.y1), (line.x2, line.y2), 2)
-                line.is_good_line = True
-        number_of_lines = 0
-        total = 0
-        for i, line, in enumerate(line_array):
-            if line_array[0].is_good_line:
-                angle = line_array[0].angle#*(line.total_distance_to_start/line.number_of_dots)
-                if (angle < 0):
-                    angle += math.pi*2#*(line.total_distance_to_start/line.number_of_dots)
-                total += angle
-                number_of_lines += 1#*(line.total_distance_to_start/line.number_of_dots)
-                #print angle
-        average = 0
-        if (number_of_lines != 0):
-            average = total/number_of_lines
-        if (average != 0):
-            point3 = ((self.center[0] + math.cos(average)*100), (self.center[1] + math.sin(average)*100))
-            print point3
-            pygame.draw.line(self.screen, pygame.Color('black'), self.center, point3, 5)
+            for i, line in enumerate(line_array):
+                #line.reset_dots()
+                for j, point in enumerate(xAndYArray):
+                    distance_to_line = dpa.point_line_distance((point[0], point[1]), (line.x1, line.y1), (line.x2, line.y2))
+                    distance_to_start = dpa.distance((point[0], point[1]),(line.x1, line.y1))
+                    if (distance_to_line < .14*self.scaling and distance_to_line > 0):
+                        #print distance_to_line
+                        line.number_of_dots += 1
+                        line.total_distance_to_start += distance_to_start
+                #print line.number_of_dots
+                line_distance = dpa.distance((line.x1, line.y1), (line.x2, line.y2))
+                line.line_distance = line_distance
+                if(line.number_of_dots > 5 and line_distance/line.number_of_dots < 2):
+                #(line.number_of_dots > 30 and line.total_distance_to_start/line.number_of_dots < 1.5*self.scaling):
+                    pygame.draw.line(self.screen, pygame.Color('red'), (line.x1, line.y1), (line.x2, line.y2), 2)
+                    line.is_good_line = True
+            number_of_lines = 0
+            total = 0
+            for i, line, in enumerate(line_array):
+                if line.is_good_line:
+                    if line.number_of_dots > 0:
+                        angle = line.angle
+                        while (angle < 0):
+                            angle += math.pi
+                        while (angle > math.pi):
+                            angle -= math.pi
+                        total += angle*line.line_distance/line.number_of_dots
+                        print angle*180.0/math.pi, line.line_distance
+                        number_of_lines += 1*line.line_distance/line.number_of_dots
+                    #print angle
+            print 'start'
+            average = 0
+            if (number_of_lines != 0):
+                average = total/number_of_lines
+                # if average < 0:
+                #     average += math.pi
+                print average*180.0/math.pi
+                point3 = ((self.center[0] - math.cos(average)*100), (self.center[1] - math.sin(average)*100))
+                pygame.draw.line(self.screen, pygame.Color('green'), self.center, point3, 5)
+            if (average != 0):
+                if(self.cycle > 5):
+                    total_average = self.total_cycle/6
+                    if total_average < 0:
+                        total_average += math.pi
+                    self.heading_point = ((self.center[0] - math.cos(total_average)*100), (self.center[1] - math.sin(total_average)*100))
+                    #print self.heading_point
+                    self.cycle = 0
+                    self.total_cycle = 0      
+                else:
+                    self.cycle += 1
+                    self.total_cycle += average
+                    pygame.draw.line(self.screen, pygame.Color('black'), self.center, self.heading_point, 5)
                 #print line.angle*180.0/math.pi
+        """
+        self.screen.fill(pygame.Color('grey'))
+        #print self.heading_point
+        test1x = self.center[0] + 100
+        test2x = self.center[1]
+        test1y = self.center[0] + 20
+        test2y = self.center[1]
+        pygame.draw.line(self.screen, pygame.Color('red'), (test1x, test1y), (test2x, test2y), 2)
+        angle = self.get_angle((test1x, test1y), (test2x, test2y))
+        if (angle < 0):
+            angle += math.pi
+            #pass
+        if (angle < math.pi):
+            angle -= math.pi
+        print angle
+
+        point5 = ((self.center[0] - math.cos(angle)*50), (self.center[1] - math.sin(angle)*50))
+        pygame.draw.line(self.screen, pygame.Color('green'), (test2x, test2y), point5, 5)"""
+
         pygame.display.update()
 
     def get_angle(self, point1, point2):
@@ -183,7 +226,8 @@ class Line(object):
         self.angle = angle
         self.total_distance_to_start = 0
         self.number_of_dots = 0
-        self.is_good_line = True
+        self.is_good_line = False
+        self.line_distance = 0
     def add_dots(self):
         self.number_of_dots += 1
     def add_distance(self, distance):
