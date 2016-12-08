@@ -30,6 +30,7 @@ int velocityIndex;
 int turnIndex;
 float dangerDistance = 0.5;
 float previousDistance = 1.0;
+bool goStraight = false;
 //Output of 11 values, robot vision split in to two, left and right. Object detected on left side = turn right, object on
 //right = turn left. position in 11 val array moves based on how close the object is in the left/right detection. weight is determined by
 //outside of the range, of x positions, value gets a sum based off of other values.
@@ -44,12 +45,11 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     int gapDetectionIndex = zeroIndex + (gapDetectionAngle / angleIncrement); // watching for gaps in the track
     std::vector<float> ranges = msg->ranges;
 
-    float closestRange = ranges[endIndex];
+    float closestRange = 999;
     int closestAngle;
     for(int i = endIndex; i > startIndex; i--){
         if (ranges[i] < closestRange && ranges[i] > 0.03){
             closestRange = ranges[i];
-            std::cout << closestRange << std::endl;
         }
     }
 
@@ -67,7 +67,7 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     //std::cout << ranges[detectionDegreeIndex] << std::endl;
     std::cout << optimalRange << std::endl;
     //std::cout << closestAngle << std::endl;
-    detectionRange = ranges[detectionDegreeIndex];
+    detectionRange = 999;
     maxDetectionRange = ranges[detectionDegreeIndex];
     for(int i = detectionDegreeIndex + detectionAngleSliceOffset; i > detectionDegreeIndex - detectionAngleSliceOffset; i--){
         if (ranges[i] < detectionRange){
@@ -84,12 +84,17 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
         turnIndex = 0;
     }
     //std::cout << gapDetectionIndex << std::endl;
-    if(ranges[gapDetectionIndex] > gapThreshold){
-        turnIndex = 6;
-        std::cout << "GAP!!!" << std::endl;
+    if(abs(previousDistance - ranges[gapDetectionIndex]) > gapThreshold){
+        goStraight = !goStraight;
+    }
+
+    if(goStraight){
+        turnIndex = 5;
     }
 
     obsTurnArray[turnIndex] = 1.0;
+
+    previousDistance = ranges[gapDetectionIndex];
 
     std::reverse(obsTurnArray.begin(), obsTurnArray.end());
 
