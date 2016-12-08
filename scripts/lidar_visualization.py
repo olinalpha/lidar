@@ -2,8 +2,9 @@ import rospy
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Vector3Stamped
 from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import Float32
 #import numpy as np
-#import pygame
+import pygame
 #import time
 import math
 #import sys
@@ -12,7 +13,7 @@ import math
 class LaserVisualization:
     def __init__(self, model, screen, dpa):
         self.sub = rospy.Subscriber('/scan', LaserScan, self.laser_callback)
-        #self.sub = rospy.Subscriber('/imu/mag', Vector3Stamped, self.imu_callback)
+        self.sub = rospy.Subscriber('/imu/heading', Float32, self.imu_callback)
         self.pub = rospy.Publisher('wpt/cmd_vel', Float32MultiArray, queue_size = 1)
         scanArray = []
         self.model = model
@@ -40,15 +41,8 @@ class LaserVisualization:
         self.vel_array = [0]*11
         self.turn_direction = 0
     def imu_callback(self, scan):
-        if(not math.isnan(scan.vector.z)):
-            #self.heading_y = scan.vector.y*200
-            #self.heading_x = scan.vector.z*200
-            self.heading = scan.vector.z
-            pass
-        #print self.heading_x
-        self.heading_x = -int(math.cos(self.heading)*200)
-        self.heading_y = int(math.sin(self.heading)*200)
-        #print self.heading_x, self.heading_y
+        if(not math.isnan(scan.data)):
+            self.heading = scan.data
 
 
     def laser_callback(self, scan):
@@ -58,7 +52,7 @@ class LaserVisualization:
         self.ranges = scan.ranges
         self.draw()
     def draw(self):
-        #self.screen.fill(pygame.Color('grey'))
+        self.screen.fill(pygame.Color('grey'))
         xAndYArray = []
         prev_distance = 0
         max_point_difference = 0
@@ -69,9 +63,9 @@ class LaserVisualization:
 
 
         for i in range(len(self.ranges)):
-            if i in noise_index_array:
+            #if i in noise_index_array:
                 #color = pygame.Color('red')
-            else:
+            #else:
                 #color = pygame.Color('blue')
             self.current_angle = i*self.angle_increment + self.angle_min
             if(not math.isnan(self.ranges[i])):
@@ -80,7 +74,7 @@ class LaserVisualization:
                 if(abs(x) > + self.tolerance and abs(y) > self.tolerance):
                     xAndYArray.append([x + self.model.width/2, y + self.model.height/2])
 
-            #pygame.draw.circle(self.screen, color, (x + self.model.width/2,y + self.model.height/2), 2)
+            pygame.draw.circle(self.screen, pygame.Color('blue'), (x + self.model.width/2,y + self.model.height/2), 2)
         #print self.heading_x
         if(len(xAndYArray) > 0):
             rdp_array = dpa.rdp(xAndYArray, 2)
@@ -90,7 +84,7 @@ class LaserVisualization:
                 #print rdp_array[i]
                 x = rdp_array[i][0]
                 y = rdp_array[i][1]
-                #pygame.draw.circle(self.screen, pygame.Color('green'), (x,y), 2)
+                pygame.draw.circle(self.screen, pygame.Color('green'), (x,y), 2)
                 for j in range(i, len(rdp_array)):
                     x1 = rdp_array[i][0]
                     y1 = rdp_array[i][1]
@@ -116,7 +110,7 @@ class LaserVisualization:
                 line.line_distance = line_distance
                 if(line.number_of_dots > 5 and line_distance/line.number_of_dots < 1.5):
                 #(line.number_of_dots > 30 and line.total_distance_to_start/line.number_of_dots < 1.5*self.scaling):
-                    #pygame.draw.line(self.screen, pygame.Color('red'), (line.x1, line.y1), (line.x2, line.y2), 2)
+                    pygame.draw.line(self.screen, pygame.Color('red'), (line.x1, line.y1), (line.x2, line.y2), 2)
                     line.is_good_line = True
             number_of_lines = 0
             total = 0
@@ -137,13 +131,14 @@ class LaserVisualization:
             if (number_of_lines != 0):
                 average = total/number_of_lines
                 point3 = ((self.center[0] - math.cos(average)*100), (self.center[1] - math.sin(average)*100))
-                #pygame.draw.line(self.screen, pygame.Color('green'), self.center, point3, 5)
+                pygame.draw.line(self.screen, pygame.Color('green'), self.center, point3, 5)
             if (average != 0):
                 if(self.cycle > 5):
                     total_average = self.total_cycle/6
                     if total_average < 0:
                         total_average += math.pi
                     self.turn_direction = total_average - math.pi/2
+                    self.current_go_heading = self.turn_direction - self.heading
                     self.turn_array = [0]*11
                     #print self.turn_direction*7/(math.pi/6)
                     index = int(self.turn_direction*7/(math.pi/6))
@@ -167,9 +162,9 @@ class LaserVisualization:
                 else:
                     self.cycle += 1
                     self.total_cycle += average
-                    #pygame.draw.line(self.screen, pygame.Color('black'), self.center, self.heading_point, 5)
+                    pygame.draw.line(self.screen, pygame.Color('black'), self.center, self.heading_point, 5)
 
-        #pygame.display.update()
+        pygame.display.update()
 
     def get_angle(self, point1, point2):
         return math.atan2((point2[1]-point1[1]),(point2[0]-point1[0]))
@@ -242,6 +237,6 @@ if __name__ == '__main__':
     rospy.init_node('lidar_visulization')
     model = LidarModel();
     dpa= DPAlgorithm();
-    screen = 5 #pygame.display.set_mode(model.size)
+    screen = pygame.display.set_mode(model.size)
     laser = LaserVisualization(model, screen, dpa)
     rospy.spin()
