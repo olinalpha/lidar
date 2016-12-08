@@ -5,6 +5,7 @@
 #include "ros/ros.h"
 #include "sensor_msgs/LaserScan.h"
 #include "std_msgs/Float32MultiArray.h"
+#include "std_msgs/Bool.h"
 #include <math.h>
 
 #define PI 3.1415926535
@@ -14,6 +15,7 @@
  */
 
 ros::Publisher *velocity_data_ptr;
+ros::Publisher *bool_data_ptr;
 
 float robotLength = 0.5; // meters
 float robotLengthTolerance = 0.1; //meters
@@ -91,6 +93,7 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     float trueRMin = rMin;
     float rMinRight = rMin;
     float rMinLeft = rMin;
+    bool detected = false;
     //Runs through values, if within half robot length, we grab that r value. The position depends on inverse squared.
     //In addition, runs through the rest of the values, as a step. We add these values onto the weight of the thing.
 
@@ -100,6 +103,7 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     for (int i = 0; i < rightValues.size(); i++) {
         if (rightValues[i].x < totalDetectionWidth/2){
             if(rightValues[i].r < rMinRobot){
+                detected = true;
                 rMinRobot = rightValues[i].r;
                 weight =  scaleWeightValues(rMinRobot);
                 trueRMin = rMinRobot;
@@ -129,6 +133,7 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     //repeat for left side
     for (int i = 0; i < leftValues.size(); i++) {
         if (leftValues[i].x < totalDetectionWidth/2){
+            detected = true;
             if(leftValues[i].r < rMinRobot){
                 rMinRobot = leftValues[i].r;
                 weight = scaleWeightValues(rMinRobot);
@@ -183,7 +188,9 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
             std::cout << "" << std::endl;
         }
     }
-
+    std_msgs::Bool detectedBool;
+    detectedBool.data = detected;
+    bool_data_ptr ->publish(detectedBool);
     velocity_data_ptr->publish(msg_out);
 
 }
@@ -227,8 +234,10 @@ int main(int argc, char **argv)
      */
     ros::Subscriber sub = n.subscribe("scan", 1000, chatterCallback);
     ros::Publisher velocity_data = n.advertise<std_msgs::Float32MultiArray>("obst/cmd_vel", 1000);
+    ros::Publisher bool_data = n.advertise<std_msgs::Bool>("obst/detected", 1000);
     std::cout << "Streaming Data" << std::endl;
     velocity_data_ptr = &velocity_data;
+    bool_data_ptr = &bool_data;
 
     /**
      * ros::spin() will enter a loop, pumping callbacks.  With this version, all
