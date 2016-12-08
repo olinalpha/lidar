@@ -20,12 +20,13 @@ float robotLengthTolerance = 0.1; //meters
 float totalDetectionWidth = robotLength + robotLengthTolerance; // meters
 float optimalRange = 1.25;
 float detectionAngle = 85 * (PI/180.0);
-float detectionAngleSliceOffset = 10 * (PI/180);
+float detectionAngleSliceOffset = 5 * (PI/180);
 float detectionRange;
 float maxDetectionRange;
 float angleThreshold = 120 * (PI/180.0);
-float gapDetectionAngle = 90 * (PI/180.0);
-const float gapThreshold = 2.0;
+float gapDetectionAngle = 80 * (PI/180.0);
+float gapDetectionSliceOffset = 5 * (PI/180);
+const float gapThreshold = 1.0;
 int velocityIndex;
 int turnIndex;
 float dangerDistance = 0.5;
@@ -77,15 +78,25 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 
     turnIndex = int((detectionRange/optimalRange)*11) - 6;
     std::vector<float> obsTurnArray(11);
-    if (turnIndex > 10) {
-        turnIndex = 10;
+    if (turnIndex > 8) {
+        turnIndex = 8;
     }
-    else if (turnIndex < 0){
-        turnIndex = 0;
+    else if (turnIndex < 2){
+        turnIndex = 2;
     }
+
+    int counter = 0;
+    float gapAvg = 0.0;
+    for(int i = gapDetectionIndex + gapDetectionSliceOffset; i > gapDetectionIndex - gapDetectionSliceOffset; i--){
+        counter++;
+        gapAvg += ranges[i];
+    }
+
+    gapAvg /= (float)counter;
     //std::cout << gapDetectionIndex << std::endl;
-    if(abs(previousDistance - ranges[gapDetectionIndex]) > gapThreshold){
+    if(abs(previousDistance - gapAvg) > gapThreshold){
         goStraight = !goStraight;
+		std::cout<<"GAP!"<<std::endl;
     }
 
     if(goStraight){
@@ -94,7 +105,7 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 
     obsTurnArray[turnIndex] = 1.0;
 
-    previousDistance = ranges[gapDetectionIndex];
+    previousDistance = gapAvg;
 
     std::reverse(obsTurnArray.begin(), obsTurnArray.end());
 
@@ -155,7 +166,7 @@ int main(int argc, char **argv)
      * away the oldest ones.
      */
     ros::Subscriber sub = n.subscribe("scan", 1000, chatterCallback);
-    ros::Publisher velocity_data = n.advertise<std_msgs::Float32MultiArray>("obst/cmd_vel", 1000);
+    ros::Publisher velocity_data = n.advertise<std_msgs::Float32MultiArray>("wall/cmd_vel", 1000);
     std::cout << "Streaming Data" << std::endl;
     velocity_data_ptr = &velocity_data;
 
