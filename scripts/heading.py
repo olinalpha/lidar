@@ -19,7 +19,7 @@ class IMUHeading:
         self.threshold = .2
     def imu_callback(self, scan):
         if(not math.isnan(scan.data)):
-            self.heading = scan.data
+            self.heading = -scan.data
     def detected_callback(self, scan):
         self.object_detected = scan.data
         print self.object_detected
