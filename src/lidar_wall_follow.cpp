@@ -49,7 +49,7 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     for(int i = endIndex; i > startIndex; i--){
         if (ranges[i] < closestRange && ranges[i] > 0.03){
             closestRange = ranges[i];
-            closestAngle = i;
+            std::cout << closestRange << std::endl;
         }
     }
 
