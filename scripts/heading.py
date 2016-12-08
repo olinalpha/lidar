@@ -9,7 +9,7 @@ class IMUHeading:
     def __init__(self):
         self.sub = rospy.Subscriber('/imu/heading', Float32, self.imu_callback)
         self.sub = rospy.Subscriber('/obst/detected', Bool, self.detected_callback)
-        self.pub = rospy.Publisher('wpt/cmd_vel', Float32MultiArray, queue_size = 1)
+        self.pub = rospy.Publisher('/wpt/cmd_vel', Float32MultiArray, queue_size = 1)
         self.heading = 0
         self.object_detected = False
         self.turn_array = [0]*11
@@ -17,30 +17,32 @@ class IMUHeading:
         self.previous_heading = self.heading
         self.updated_heading = False
         self.threshold = .2
+        self.difference = 0
     def imu_callback(self, scan):
         if(not math.isnan(scan.data)):
             self.heading = -scan.data
     def detected_callback(self, scan):
         self.object_detected = scan.data
-        print self.object_detected
+        #print self.object_detected
     def run(self):
-        if(object_detected):
-            if(not updated_heading):
+        if(self.object_detected):
+            if(not self.updated_heading):
                 self.previous_heading = self.heading
                 self.updated_heading = True
         else:
-            difference = self.previous_heading - self.heading
+            self.difference = self.previous_heading - self.heading
             self.updated_heading = False
-        if(abs(difference) < self.threshold):
-            self.previous_heading = self.heading
-            self.updated_heading = False
+            if(abs(self.difference) < self.threshold):
+                self.previous_heading = self.heading
+                self.updated_heading = False
         self.turn_array = [0]*11
-        index = int(difference * 7/(math.pi/6))
+        index = int(self.difference * 7/(math.pi/6))
         if index < -4:
             index = -5
         if index > 4:
             index = 5
-        self.turn_array[5 + index] = .02
+        print 'test'
+        self.turn_array[5 - index] = .02
         msg = Float32MultiArray()
         vel_array = [0]*11
         total_array = vel_array
@@ -49,9 +51,10 @@ class IMUHeading:
         self.pub.publish(msg)
 
 if __name__ == '__main__':
-    print 'start'
+   #print 'start'
     rospy.init_node('heading')
     imuHeading = IMUHeading()
-    rospy.spin()
+    r = rospy.Rate(50)
     while not(rospy.is_shutdown()):
-        main.run()
+        imuHeading.run()
+        r.sleep()

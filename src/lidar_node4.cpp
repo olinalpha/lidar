@@ -7,6 +7,7 @@
 #include "std_msgs/Float32MultiArray.h"
 #include "std_msgs/Bool.h"
 #include <math.h>
+#include "geometry_msgs/Twist.h"
 
 #define PI 3.1415926535
 
@@ -24,6 +25,7 @@ int turnScaleFactor = 2;
 float angleThreshold = 120 * (PI / 180);
 float rMin = 2.5;
 int smallestDetectionRange = .5;
+float angularZ = 0;
 //Output of 11 values, robot vision split in to two, left and right. Object detected on left side = turn right, object on
 //right = turn left. position in 11 val array moves based on how close the object is in the left/right detection. weight is determined by
 //outside of the range, of x positions, value gets a sum based off of other values.
@@ -50,8 +52,12 @@ float scaleWeightValues(float input) {
 bool whichisbigger(const XandRValues& a, const XandRValues& b){
     return a.x < b.x;
 }
+void getCmdVel(const geometry_msgs::Twist::ConstPtr& msg){
+    angularZ = msg->data;
+}
 
 void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
+    std::cout << angularZ << std::endl;
     float angleMin = msg->angle_min;
     float angleIncrement = msg->angle_increment;
     int zeroIndex = -angleMin / angleIncrement;
@@ -116,7 +122,7 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
                 }
             }else{
                 weight += scaleWeightValues(rMinRight);
-                std::cout << scaleWeightValues(rMinRight) << std::endl;
+                //std::cout << scaleWeightValues(rMinRight) << std::endl;
                 stepIndex ++;
                 rMinRight = rMin;
             }
@@ -162,7 +168,7 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     int velocityIndex;
 
     velocityIndex = int((trueRMin/rMin)*11) + 5;
-    std::cout << trueRMin << std::endl;
+    //std::cout << trueRMin << std::endl;
     if (velocityIndex > 10) {
         velocityIndex = 10;
     }
@@ -233,6 +239,7 @@ int main(int argc, char **argv)
      * away the oldest ones.
      */
     ros::Subscriber sub = n.subscribe("scan", 1000, chatterCallback);
+    ros::Subscriber sub2 = n.subscribe("/cmd_vel", 1000, getCmdVel);
     ros::Publisher velocity_data = n.advertise<std_msgs::Float32MultiArray>("obst/cmd_vel", 1000);
     ros::Publisher bool_data = n.advertise<std_msgs::Bool>("obst/detected", 1000);
     std::cout << "Streaming Data" << std::endl;

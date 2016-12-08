@@ -14,7 +14,7 @@ class LaserVisualization:
     def __init__(self, model, screen, dpa):
         self.sub = rospy.Subscriber('/scan', LaserScan, self.laser_callback)
         self.sub = rospy.Subscriber('/imu/heading', Float32, self.imu_callback)
-        self.pub = rospy.Publisher('wpt/cmd_vel', Float32MultiArray, queue_size = 1)
+        self.pub = rospy.Publisher('/wpt/cmd_vel', Float32MultiArray, queue_size = 1)
         scanArray = []
         self.model = model
         self.dpa = dpa
