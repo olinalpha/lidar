@@ -1,7 +1,7 @@
 import rospy
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Vector3Stamped
-from std_msgs.msg import Float32
+from std_msgs.msg import Float32MultiArray
 import numpy as np
 import pygame
 import time
@@ -12,7 +12,8 @@ import sys
 class LaserVisualization:
     def __init__(self, model, screen, dpa):
         self.sub = rospy.Subscriber('/scan', LaserScan, self.laser_callback)
-        self.sub = rospy.Subscriber('/imu/mag', Vector3Stamped, self.imu_callback)
+        #self.sub = rospy.Subscriber('/imu/mag', Vector3Stamped, self.imu_callback)
+        self.pub = rospy.Publisher('wpt/cmd_vel', Float32MultiArray, queue_size = 1)
         scanArray = []
         self.model = model
         self.dpa = dpa
@@ -35,6 +36,9 @@ class LaserVisualization:
         self.heading_point = self.center
         self.cycle = 0
         self.total_cycle = 0
+        self.turn_array = [0]*11
+        self.vel_array = [0]*11
+        self.turn_direction = 0
     def imu_callback(self, scan):
         if(not math.isnan(scan.vector.z)):
             #self.heading_y = scan.vector.y*200
@@ -54,7 +58,7 @@ class LaserVisualization:
         self.ranges = scan.ranges
         self.draw()
     def draw(self):
-        self.screen.fill(pygame.Color('grey'))
+        #self.screen.fill(pygame.Color('grey'))
         xAndYArray = []
         prev_distance = 0
         max_point_difference = 0
@@ -62,46 +66,6 @@ class LaserVisualization:
         temp_index_array = []
         angle_started = False
         temp_angle = self.angle_min
-        """
-        for i in range(len(self.ranges)):
-            if (self.ranges[i] > .4 and self.ranges[i-1] > .4):
-                self.current_angle = i*self.angle_increment + self.angle_min
-
-                if(abs(prev_distance - self.ranges[i]) > self.cone_detection_jump):
-                    temp_index_array = []
-                    angle_started = False
-                else:
-                    if(len(temp_index_array) > 0):
-                        if(abs((temp_index_array[0] - i)*self.angle_increment) > self.cone_detection_angle):
-                            noise_index_array.extend(temp_index_array)
-                        else:
-                            temp_index_array = []
-                            angle_started = False
-                #
-                # if(not math.isnan(self.ranges[i])):
-                #     point_difference = abs(prev_distance - self.ranges[i])
-                #     if (point_difference > self.cone_detection_jump):
-                #         pass
-                #         #temp_index_array.append((i, point_difference))
-                    
-
-                #     if(len(temp_index_array) > 0):
-                #         if(abs(point_difference) < self.cone_detection_threshold):
-                #             temp_index_array.append(i)
-                #         else:
-                #             if((i - temp_index_array[0])*self.angle_increment < self.cone_detection_angle):
-                #                 #if the angle of index is less than the cone detection angle, pass the temp index into the shit
-                #                 noise_index_array.extend(temp_index_array)
-                #                 temp_index_array = []
-                if(not math.isnan(self.ranges[i])):
-                    if(self.current_angle - temp_angle > self.angle_threshold):
-                        angle_started = True
-                    temp_angle = self.current_angle
-                    if angle_started:
-                        temp_index_array.append(i)
-                #if()
-                prev_distance = self.ranges[i]"""
-
 
 
         for i in range(len(self.ranges)):
@@ -115,10 +79,8 @@ class LaserVisualization:
                 y = -int(self.ranges[i]*math.cos(self.current_angle)*self.scaling)
                 if(abs(x) > + self.tolerance and abs(y) > self.tolerance):
                     xAndYArray.append([x + self.model.width/2, y + self.model.height/2])
-            """if(i in noise_index_array):
-                point = ((self.center[0] + x*10), (self.center[1] + y*10))
-                pygame.draw.line(self.screen, pygame.Color('green'), self.center, point, 3)"""
-            pygame.draw.circle(self.screen, color, (x + self.model.width/2,y + self.model.height/2), 2)
+
+            #pygame.draw.circle(self.screen, color, (x + self.model.width/2,y + self.model.height/2), 2)
         #print self.heading_x
         if(len(xAndYArray) > 0):
             rdp_array = dpa.rdp(xAndYArray, 2)
@@ -128,7 +90,7 @@ class LaserVisualization:
                 #print rdp_array[i]
                 x = rdp_array[i][0]
                 y = rdp_array[i][1]
-                pygame.draw.circle(self.screen, pygame.Color('green'), (x,y), 2)
+                #pygame.draw.circle(self.screen, pygame.Color('green'), (x,y), 2)
                 for j in range(i, len(rdp_array)):
                     x1 = rdp_array[i][0]
                     y1 = rdp_array[i][1]
@@ -152,9 +114,9 @@ class LaserVisualization:
                 #print line.number_of_dots
                 line_distance = dpa.distance((line.x1, line.y1), (line.x2, line.y2))
                 line.line_distance = line_distance
-                if(line.number_of_dots > 5 and line_distance/line.number_of_dots < 2):
+                if(line.number_of_dots > 5 and line_distance/line.number_of_dots < 1.5):
                 #(line.number_of_dots > 30 and line.total_distance_to_start/line.number_of_dots < 1.5*self.scaling):
-                    pygame.draw.line(self.screen, pygame.Color('red'), (line.x1, line.y1), (line.x2, line.y2), 2)
+                    #pygame.draw.line(self.screen, pygame.Color('red'), (line.x1, line.y1), (line.x2, line.y2), 2)
                     line.is_good_line = True
             number_of_lines = 0
             total = 0
@@ -166,53 +128,48 @@ class LaserVisualization:
                             angle += math.pi
                         while (angle > math.pi):
                             angle -= math.pi
-                        total += angle*line.line_distance/line.number_of_dots
-                        print angle*180.0/math.pi, line.line_distance
-                        number_of_lines += 1*line.line_distance/line.number_of_dots
+                        total += angle*line.line_distance#/line.number_of_dots
+                        #print angle*180.0/math.pi, line.line_distance
+                        number_of_lines += 1*line.line_distance#/line.number_of_dots
                     #print angle
-            print 'start'
+            #print 'start'
             average = 0
             if (number_of_lines != 0):
                 average = total/number_of_lines
-                # if average < 0:
-                #     average += math.pi
-                print average*180.0/math.pi
                 point3 = ((self.center[0] - math.cos(average)*100), (self.center[1] - math.sin(average)*100))
-                pygame.draw.line(self.screen, pygame.Color('green'), self.center, point3, 5)
+                #pygame.draw.line(self.screen, pygame.Color('green'), self.center, point3, 5)
             if (average != 0):
                 if(self.cycle > 5):
                     total_average = self.total_cycle/6
                     if total_average < 0:
                         total_average += math.pi
+                    self.turn_direction = total_average - math.pi/2
+                    self.turn_array = [0]*11
+                    #print self.turn_direction*7/(math.pi/6)
+                    index = int(self.turn_direction*7/(math.pi/6))
+                    if index < -4:
+                        index = -5
+                    if index > 4:
+                        index = 5
+                    self.turn_array[5 + index] = .01
+                    msg = Float32MultiArray()
+                    self.vel_array = [0]*11
+                    total_array = self.vel_array
+                    total_array.extend(self.turn_array)
+                    msg.data = total_array
+                    self.pub.publish(msg)
+                    
+                    print self.turn_array
                     self.heading_point = ((self.center[0] - math.cos(total_average)*100), (self.center[1] - math.sin(total_average)*100))
-                    #print self.heading_point
+                    
                     self.cycle = 0
                     self.total_cycle = 0      
                 else:
                     self.cycle += 1
                     self.total_cycle += average
-                    pygame.draw.line(self.screen, pygame.Color('black'), self.center, self.heading_point, 5)
-                #print line.angle*180.0/math.pi
-        """
-        self.screen.fill(pygame.Color('grey'))
-        #print self.heading_point
-        test1x = self.center[0] + 100
-        test2x = self.center[1]
-        test1y = self.center[0] + 20
-        test2y = self.center[1]
-        pygame.draw.line(self.screen, pygame.Color('red'), (test1x, test1y), (test2x, test2y), 2)
-        angle = self.get_angle((test1x, test1y), (test2x, test2y))
-        if (angle < 0):
-            angle += math.pi
-            #pass
-        if (angle < math.pi):
-            angle -= math.pi
-        print angle
+                    #pygame.draw.line(self.screen, pygame.Color('black'), self.center, self.heading_point, 5)
 
-        point5 = ((self.center[0] - math.cos(angle)*50), (self.center[1] - math.sin(angle)*50))
-        pygame.draw.line(self.screen, pygame.Color('green'), (test2x, test2y), point5, 5)"""
-
-        pygame.display.update()
+        #pygame.display.update()
 
     def get_angle(self, point1, point2):
         return math.atan2((point2[1]-point1[1]),(point2[0]-point1[0]))
@@ -285,6 +242,6 @@ if __name__ == '__main__':
     rospy.init_node('lidar_visulization')
     model = LidarModel();
     dpa= DPAlgorithm();
-    screen = pygame.display.set_mode(model.size)
+    screen = 5 #pygame.display.set_mode(model.size)
     laser = LaserVisualization(model, screen, dpa)
     rospy.spin()
