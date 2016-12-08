@@ -85,27 +85,27 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
         turnIndex = 2;
     }
 
-    int counter = 0;
-    float gapAvg = 0.0;
-    for(int i = gapDetectionIndex + gapDetectionSliceOffset; i > gapDetectionIndex - gapDetectionSliceOffset; i--){
-        counter++;
-        gapAvg += ranges[i];
-    }
-
-    gapAvg /= (float)counter;
-    //std::cout << gapDetectionIndex << std::endl;
-    if(abs(previousDistance - gapAvg) > gapThreshold){
-        goStraight = !goStraight;
-		std::cout<<"GAP!"<<std::endl;
-    }
-
-    if(goStraight){
-        turnIndex = 5;
-    }
+//    int counter = 0;
+//    float gapAvg = 0.0;
+//    for(int i = gapDetectionIndex + gapDetectionSliceOffset; i > gapDetectionIndex - gapDetectionSliceOffset; i--){
+//        counter++;
+//        gapAvg += ranges[i];
+//    }
+//
+//    gapAvg /= (float)counter;
+//    //std::cout << gapDetectionIndex << std::endl;
+//    if(abs(previousDistance - gapAvg) > gapThreshold){
+//        goStraight = !goStraight;
+//		std::cout<<"GAP!"<<std::endl;
+//    }
+//
+//    if(goStraight){
+//        turnIndex = 5;
+//    }
 
     obsTurnArray[turnIndex] = 1.0;
 
-    previousDistance = gapAvg;
+//    previousDistance = gapAvg;
 
     std::reverse(obsTurnArray.begin(), obsTurnArray.end());
 
